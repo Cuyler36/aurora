@@ -10,7 +10,7 @@
 
 static aurora::Module reporter("aurora::os::report");
 
-void OSReport(const char* msg, ...) {
+WEAK void OSReport(const char* msg, ...) {
   va_list args;
   va_start(args, msg);
   OSVReport(msg, args);
@@ -24,11 +24,11 @@ static std::string FormatToString(const char* msg, va_list list) {
   return buf;
 }
 
-void OSVReport(const char* msg, va_list list) {
+WEAK void OSVReport(const char* msg, va_list list) {
   reporter.info("{}", FormatToString(msg, list));
 }
 
-void OSPanic(const char* file, int line, const char* msg, ...) {
+WEAK void OSPanic(const char* file, int line, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
   reporter.fatal("PANIC {}:{}: {}", file, line, FormatToString(msg, args));

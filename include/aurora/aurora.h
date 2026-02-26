@@ -51,7 +51,9 @@ typedef struct AuroraEvent AuroraEvent;
 typedef void (*AuroraLogCallback)(AuroraLogLevel level, const char* module, const char* message, unsigned int len);
 typedef void (*AuroraImGuiInitCallback)(const AuroraWindowSize* size);
 
-#define MEM1_DEFAULT_SIZE = 24 * 1024 * 1024;
+#define MEM1_DEFAULT_SIZE (24 * 1024 * 1024)
+#define MEM2_DEFAULT_SIZE (64 * 1024 * 1024)
+#define ARAM_DEFAULT_SIZE (16 * 1024 * 1024)
 
 typedef struct {
   const char* appName;
@@ -71,6 +73,8 @@ typedef struct {
   AuroraLogCallback logCallback;
   AuroraImGuiInitCallback imGuiInitCallback;
   uint32_t mem1Size;
+  uint32_t mem2Size;
+  uint32_t aramSize;
 } AuroraConfig;
 
 typedef struct {

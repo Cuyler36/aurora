@@ -65,12 +65,15 @@ typedef int BOOL;
 #if defined(__MWERKS__)
 #define AT_ADDRESS(addr) : (addr)
 #define ATTRIBUTE_ALIGN(num) __attribute__((aligned(num)))
+#define WEAK __attribute__((weak))
 #elif defined(__GNUC__)
 #define AT_ADDRESS(addr)
 #define ATTRIBUTE_ALIGN(num) __attribute__((aligned(num)))
+#define WEAK __attribute__((weak))
 #elif defined(_MSC_VER)
 #define AT_ADDRESS(addr)
 #define ATTRIBUTE_ALIGN(num)
+#define WEAK
 #else
 #error unknown compiler
 #endif

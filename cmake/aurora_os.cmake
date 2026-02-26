@@ -7,6 +7,7 @@ add_library(aurora_os STATIC lib/dolphin/os/OSInit.cpp
         lib/dolphin/os/OSAddress.cpp
         lib/dolphin/os/OSReport.cpp
         lib/dolphin/os/OSAlloc.cpp
+        lib/dolphin/os/OSInterrupt.cpp
 )
 add_library(aurora::os ALIAS aurora_os)
 

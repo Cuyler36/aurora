@@ -20,9 +20,12 @@ uintptr_t OSBaseAddress;
 
 static void GuardGCMemory();
 static void* AllocMEM1(u32 size);
+static void* AllocMEM2(u32 size);
 
 void* MEM1Start;
 void* MEM1End;
+void* MEM2Start;
+void* MEM2End;
 
 void AuroraOSInitMemory() {
   GuardGCMemory();
@@ -31,6 +34,11 @@ void AuroraOSInitMemory() {
     MEM1Start = AllocMEM1(aurora::g_config.mem1Size);
     MEM1End = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(MEM1Start) + aurora::g_config.mem1Size);
     OSBaseAddress = reinterpret_cast<uintptr_t>(MEM1Start);
+  }
+
+  if (aurora::g_config.mem2Size > 0) {
+    MEM2Start = AllocMEM2(aurora::g_config.mem2Size);
+    MEM2End = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(MEM2Start) + aurora::g_config.mem2Size);
   }
 }
 
@@ -51,11 +59,7 @@ static void TryGuardRegion(const uintptr_t start, const uintptr_t end, char cons
   assert(start != 0);
 
 #if _WIN32
-  const auto addr = VirtualAlloc(
-      reinterpret_cast<LPVOID>(start),
-      end - start,
-      MEM_RESERVE,
-      PAGE_NOACCESS);
+  const auto addr = VirtualAlloc(reinterpret_cast<LPVOID>(start), end - start, MEM_RESERVE, PAGE_NOACCESS);
 
   if (addr == nullptr) {
     Log.debug("Unable to guard memory region: {}", name);
@@ -90,7 +94,7 @@ static void GuardGCMemory() {
   TryGuardRegion(0xfff00000, 0xffffffff, "GC IPL");
 }
 #else
-static void GuardGCMemory() { }
+static void GuardGCMemory() {}
 #endif
 
 #if _WIN64 && !NDEBUG
@@ -98,19 +102,12 @@ static void* AllocMEM1(u32 size) {
   // Allocate an entire 32-bit's worth of memory and allocate the real MEM1 in that.
   // This way, if a 64-bit pointer gets truncated to 32-bit, it will still fall in our guard pages.
 
-  void* bulkChunk = VirtualAlloc(
-    nullptr,
-    8ll * 1024 * 1024 * 1024,
-    MEM_RESERVE,
-    PAGE_NOACCESS);
+  void* bulkChunk = VirtualAlloc(nullptr, 8ll * 1024 * 1024 * 1024, MEM_RESERVE, PAGE_NOACCESS);
 
   if (bulkChunk == nullptr) {
     DWORD err = GetLastError();
     fmt::memory_buffer msg;
-    fmt::format_system_error(
-      msg,
-      static_cast<int>(err),
-      "Failed to allocate bulk chunk for MEM1");
+    fmt::format_system_error(msg, static_cast<int>(err), "Failed to allocate bulk chunk for MEM1");
     Log.fatal("{}", fmt::to_string(msg));
   }
 
@@ -118,19 +115,14 @@ static void* AllocMEM1(u32 size) {
   void* mem1Address = reinterpret_cast<void*>(memSpace + 0x80000000);
 
   Log.debug("Reserved memory map at {:016X}-{:016X}", memSpace, memSpace + 0xFFFFFFFF);
-  Log.debug(
-    "MEM1 at {:016X}-{:016X}",
-    reinterpret_cast<uintptr_t>(mem1Address),
-    reinterpret_cast<uintptr_t>(mem1Address) + size);
+  Log.debug("MEM1 at {:016X}-{:016X}", reinterpret_cast<uintptr_t>(mem1Address),
+            reinterpret_cast<uintptr_t>(mem1Address) + size);
 
   void* result = VirtualAlloc(mem1Address, size, MEM_COMMIT, PAGE_READWRITE);
   if (result == nullptr) {
     DWORD err = GetLastError();
     fmt::memory_buffer msg;
-    fmt::format_system_error(
-      msg,
-      static_cast<int>(err),
-      "Failed to commit memory for MEM1");
+    fmt::format_system_error(msg, static_cast<int>(err), "Failed to commit memory for MEM1");
     Log.fatal("{}", fmt::to_string(msg));
   }
 
@@ -138,10 +130,11 @@ static void* AllocMEM1(u32 size) {
   return result;
 }
 #else
-static void* AllocMEM1(u32 size) {
-  return calloc(1, size);
-}
+static void* AllocMEM1(u32 size) { return calloc(1, size); }
 #endif
+
+// For Wii only
+static void* AllocMEM2(u32 size) { return calloc(1, size); }
 
 u32 OSGetPhysicalMemSize() {
   const auto info = static_cast<OSBootInfo*>(OSPhysicalToCached(0));

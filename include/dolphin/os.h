@@ -77,6 +77,10 @@ u8 __gUnknown800030E3 AT_ADDRESS(OS_BASE_CACHED | 0x30E3);
 #define OSMicrosecondsToTicks(usec)  (((usec) * (OS_TIMER_CLOCK / 125000)) / 8)
 
 u32 OSGetConsoleType(void);
+
+#define OS_CONSOLE_DEV_MASK 0x10000000
+#define OS_CONSOLE_IS_DEV() ((OSGetConsoleType() & OS_CONSOLE_DEV_MASK) != 0)
+
 void OSInit(void);
 void OSRegisterVersion(const char* id);
 
